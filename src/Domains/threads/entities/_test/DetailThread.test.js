@@ -1,9 +1,8 @@
-const ThreadDetail = require('../ThreadDetail');
+const DetailThread = require('../DetailThread');
 const CommentDetail = require('../../../comments/entities/CommentDetail');
 
-describe('ThreadDetail entity', () => {
+describe('DetailThread entity', () => {
   it('should throw an error when did not contain needed property', () => {
-    // Arrange
     const payload = {
       title: 'Some Thread Title',
       body: 'Lorem Ipsum Dolor',
@@ -11,12 +10,10 @@ describe('ThreadDetail entity', () => {
       username: 'abc',
     };
 
-    // Action & Assert
-    expect(() => new ThreadDetail(payload)).toThrowError('THREAD_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
+    expect(() => new DetailThread(payload)).toThrowError('THREAD_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw an error when did not meet data type specification', () => {
-    // Arrange
     const payload = {
       id: 123,
       title: 'Some Thread Title',
@@ -42,13 +39,11 @@ describe('ThreadDetail entity', () => {
       ],
     };
 
-    // Action & Assert
-    expect(() => new ThreadDetail(payload)).toThrowError('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
-    expect(() => new ThreadDetail(payload2)).toThrowError('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new DetailThread(payload)).toThrowError('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new DetailThread(payload2)).toThrowError('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
-  it('should return ThreadDetail object correctly', () => {
-    // Arrange
+  it('should return DetailThread object correctly', () => {
     const payload = {
       id: 'thread-123',
       title: 'Some Thread Title',
@@ -73,12 +68,10 @@ describe('ThreadDetail entity', () => {
       ],
     };
 
-    // Action
     const {
       id, title, body, date, username, comments,
-    } = new ThreadDetail(payload);
+    } = new DetailThread(payload);
 
-    // Assert
     expect(id).toEqual(payload.id);
     expect(title).toEqual(payload.title);
     expect(body).toEqual(payload.body);
@@ -87,7 +80,7 @@ describe('ThreadDetail entity', () => {
     expect(comments).toEqual(payload.comments);
   });
 
-  it('should create ThreadDetail object correctly when comments is an empty array', () => {
+  it('should create DetailThread object correctly when comments is an empty array', () => {
     const payload = {
       id: 'thread-123',
       title: 'Some Thread Title',
@@ -97,12 +90,10 @@ describe('ThreadDetail entity', () => {
       comments: [],
     };
 
-    // Action
     const {
       id, title, body, date, username, comments,
-    } = new ThreadDetail(payload);
-
-    // Assert
+    } = new DetailThread(payload);
+    
     expect(id).toEqual(payload.id);
     expect(title).toEqual(payload.title);
     expect(body).toEqual(payload.body);

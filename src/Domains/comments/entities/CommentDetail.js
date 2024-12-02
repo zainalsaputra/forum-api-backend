@@ -1,4 +1,4 @@
-const ReplyDetail = require('../../replies/entities/ReplyDetail');
+const ReplyDetail = require('../../replies/entities/DetailReply');
 
 class CommentDetail {
   constructor(payload) {

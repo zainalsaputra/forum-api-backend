@@ -1,6 +1,6 @@
 const CommentDetail = require('../../comments/entities/CommentDetail');
 
-class ThreadDetail {
+class DetailThread {
   constructor(payload) {
     this._verifyPayload(payload);
 
@@ -21,7 +21,7 @@ class ThreadDetail {
       id, title, body, date, username, comments,
     } = payload;
     if (!id || !title || !body || !date || !username) {
-      throw new Error('THREAD_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
+      throw new Error('DETAIL_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
     if (
@@ -32,17 +32,17 @@ class ThreadDetail {
             || typeof username !== 'string'
             || !Array.isArray(comments)
     ) {
-      throw new Error('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
+      throw new Error('DETAIL_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
 
     if (comments.length > 0) {
       comments.forEach((comment) => {
         if (!(comment instanceof CommentDetail)) {
-          throw new Error('THREAD_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
+          throw new Error('DETAIL_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
         }
       });
     }
   }
 }
 
-module.exports = ThreadDetail;
+module.exports = DetailThread;
