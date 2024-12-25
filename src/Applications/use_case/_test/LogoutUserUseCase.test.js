@@ -2,7 +2,7 @@ const AuthenticationRepository = require('../../../Domains/authentications/Authe
 const LogoutUserUseCase = require('../LogoutUserUseCase');
 
 describe('LogoutUserUseCase', () => {
-  it('should throw error if use case payload not contain refresh token', async () => {
+  it('should throw an error if the payload does not contain a refresh token', async () => {
     // Arrange
     const useCasePayload = {};
     const logoutUserUseCase = new LogoutUserUseCase({});
@@ -13,11 +13,9 @@ describe('LogoutUserUseCase', () => {
       .toThrowError('DELETE_AUTHENTICATION_USE_CASE.NOT_CONTAIN_REFRESH_TOKEN');
   });
 
-  it('should throw error if refresh token not string', async () => {
+  it('should throw an error if the refresh token is not a string', async () => {
     // Arrange
-    const useCasePayload = {
-      refreshToken: 123,
-    };
+    const useCasePayload = { refreshToken: 123 };
     const logoutUserUseCase = new LogoutUserUseCase({});
 
     // Action & Assert
@@ -26,16 +24,14 @@ describe('LogoutUserUseCase', () => {
       .toThrowError('DELETE_AUTHENTICATION_USE_CASE.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
-  it('should orchestrating the delete authentication action correctly', async () => {
+  it('should orchestrate the delete authentication action correctly', async () => {
     // Arrange
-    const useCasePayload = {
-      refreshToken: 'refreshToken',
-    };
+    const useCasePayload = { refreshToken: 'refreshToken' };
     const mockAuthenticationRepository = new AuthenticationRepository();
-    mockAuthenticationRepository.checkAvailabilityToken = jest.fn()
-      .mockImplementation(() => Promise.resolve());
-    mockAuthenticationRepository.deleteToken = jest.fn()
-      .mockImplementation(() => Promise.resolve());
+
+    // Mocking dependencies
+    mockAuthenticationRepository.checkAvailabilityToken = jest.fn().mockResolvedValue();
+    mockAuthenticationRepository.deleteToken = jest.fn().mockResolvedValue();
 
     const logoutUserUseCase = new LogoutUserUseCase({
       authenticationRepository: mockAuthenticationRepository,

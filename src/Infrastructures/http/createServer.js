@@ -2,12 +2,13 @@ const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const ClientError = require('../../Commons/exceptions/ClientError');
 const DomainErrorTranslator = require('../../Commons/exceptions/DomainErrorTranslator');
-const users = require('../../Interfaces/http/api/users');
-const threads = require('../../Interfaces/http/api/threads');
-const comments = require('../../Interfaces/http/api/comments');
-const replies = require('../../Interfaces/http/api/replies');
-const likes = require('../../Interfaces/http/api/likes');
 const authentications = require('../../Interfaces/http/api/authentications');
+const comments = require('../../Interfaces/http/api/comments');
+const likes = require('../../Interfaces/http/api/likes');
+const replies = require('../../Interfaces/http/api/replies');
+const threads = require('../../Interfaces/http/api/threads');
+const users = require('../../Interfaces/http/api/users');
+const config = require('../../Commons/config');
 
 const createServer = async (container) => {
   const server = Hapi.server({
@@ -22,12 +23,12 @@ const createServer = async (container) => {
   ]);
 
   server.auth.strategy('forumapi_jwt', 'jwt', {
-    keys: process.env.ACCESS_TOKEN_KEY,
+    keys: config.jwt.accessTokenKey,
     verify: {
       aud: false,
       iss: false,
       sub: false,
-      maxAgeSec: process.env.ACCCESS_TOKEN_AGE,
+      maxAgeSec: config.jwt.accessTokenAge,
     },
     validate: (artifacts) => ({
       isValid: true,
@@ -40,6 +41,10 @@ const createServer = async (container) => {
   await server.register([
     {
       plugin: users,
+      options: { container },
+    },
+    {
+      plugin: authentications,
       options: { container },
     },
     {
@@ -58,11 +63,15 @@ const createServer = async (container) => {
       plugin: likes,
       options: { container },
     },
-    {
-      plugin: authentications,
-      options: { container },
-    },
   ]);
+
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler: () => ({
+      value: 'Hello world from forum API v1!',
+    }),
+  });
 
   server.ext('onPreResponse', (request, h) => {
     // mendapatkan konteks response dari request
@@ -86,6 +95,8 @@ const createServer = async (container) => {
       if (!translatedError.isServer) {
         return h.continue;
       }
+
+      // console.log(translatedError);
 
       // penanganan server error sesuai kebutuhan
       const newResponse = h.response({

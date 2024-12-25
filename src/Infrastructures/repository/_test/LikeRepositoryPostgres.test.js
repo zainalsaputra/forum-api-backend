@@ -1,126 +1,123 @@
-const pool = require('../../database/postgres/pool');
-const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
-const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
+const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const pool = require('../../database/postgres/pool');
 const LikeRepositoryPostgres = require('../LikeRepositoryPostgres');
 
 describe('LikeRepositoryPostgres', () => {
-  const userId = 'user-123';
-  const threadId = 'thread-8080';
-  const commentId = 'comment-909192';
-
   beforeAll(async () => {
-    await UsersTableTestHelper.addUser({ id: userId, username: 'John' });
-
-    await ThreadsTableTestHelper.addThread({
-      id: threadId,
-      owner: userId,
-      title: 'Taken 1',
-      body: 'I am gonna find you and i am gonna k*ll you',
-    });
-
-    await CommentsTableTestHelper.addComment({ id: commentId, owner: userId, thread: threadId });
-  });
-
-  afterAll(async () => {
-    await UsersTableTestHelper.cleanTable();
-    await ThreadsTableTestHelper.cleanTable();
-    await CommentsTableTestHelper.cleanTable();
-    await LikesTableTestHelper.cleanTable();
-    await pool.end();
-  });
-
-  beforeEach(async () => {
-    await LikesTableTestHelper.cleanTable();
+    const threadId = 'thread-123';
+    const commentId = 'comment-123';
+    const ownerId = 'user-123';
+    await UsersTableTestHelper.addUser({ id: ownerId, username: 'dicoding' });
+    await ThreadsTableTestHelper.addThread({ id: threadId, owner: ownerId });
+    await CommentsTableTestHelper.addComments({ id: commentId, owner: ownerId });
   });
 
   afterEach(async () => {
     await LikesTableTestHelper.cleanTable();
   });
 
-  describe('toggleCommentLike function', () => {
-    it('should set the comment\'s likes correctly', async () => {
-      const fakeIdGenerator = () => '5445';
+  afterAll(async () => {
+    await LikesTableTestHelper.cleanTable();
+    await CommentsTableTestHelper.cleanTable();
+    await ThreadsTableTestHelper.cleanTable();
+    await UsersTableTestHelper.cleanTable();
+    await pool.end();
+  });
+
+  describe('addLike function', () => {
+    it('should add like to database', async () => {
+      // Arrange
+      const ownerId = 'user-123';
+      const commentId = 'comment-123';
+
+      const fakeIdGenerator = () => '123'; // stub!
       const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
 
-      await likeRepositoryPostgres.toggleCommentLike(userId, commentId);
+      // Action
+      await likeRepositoryPostgres.addLike(ownerId, commentId);
 
-      const likes = await LikesTableTestHelper.findLikeById('like-5445');
-      expect(likes).toHaveLength(1);
-      expect(likes[0].is_liked).toEqual(true);
-    });
-
-    it('should update the existed comment\'s likes correctly', async () => {
-      const likeId = 'like-9183';
-
-      await LikesTableTestHelper.addLike({
-        id: likeId,
-        owner: userId,
-        comment: commentId,
-        is_liked: true,
-      });
-
-      const fakeIdGenerator = () => '9183';
-      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
-
-      await likeRepositoryPostgres.toggleCommentLike(userId, commentId);
-
-      const likes = await LikesTableTestHelper.findLikeById(likeId);
-      expect(likes[0].is_liked).toEqual(false);
+      // Assert
+      const findLikeById = await LikesTableTestHelper.findLikeById('like-123');
+      expect(findLikeById).toHaveLength(1);
     });
   });
 
-  describe('countCommentLikes function', () => {
-    it('should count a single comment\'s likes correctly', async () => {
-      const userId1 = 'user-909';
-      await UsersTableTestHelper.addUser({ id: userId1, username: 'John Wick' });
+  describe('deleteLike function', () => {
+    it('should delete like from database', async () => {
+      // Arrange
+      const id = 'like-123';
+      const ownerId = 'user-123';
+      const commentId = 'comment-123';
 
-      const userId2 = 'user-212912';
-      await UsersTableTestHelper.addUser({ id: userId2, username: 'Fujiwara Takumi' });
+      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, {});
+      await LikesTableTestHelper.addLike({});
 
-      const userId3 = 'user-1290';
-      await UsersTableTestHelper.addUser({ id: userId3, username: 'Takahasi Keisuke' });
+      // Action
+      await likeRepositoryPostgres.deleteLike(ownerId, commentId);
+      const findLikeById = await LikesTableTestHelper.findLikeById(id);
 
-      const testThreadId = 'thread-90152891';
-      await ThreadsTableTestHelper.addThread({ id: testThreadId, owner: userId });
+      // Assert
+      expect(findLikeById).toHaveLength(0);
+    });
+  });
 
-      const commentId1 = 'comment-6868321';
-      await CommentsTableTestHelper.addComment({ id: commentId1, owner: userId1, thread: testThreadId });
+  describe('verifyLikeAvailability function', () => {
+    it('should return true if like is available', async () => {
+      // Arrange
+      const ownerId = 'user-123';
+      const commentId = 'comment-123';
 
-      const commentId2 = 'comment-90781';
-      await CommentsTableTestHelper.addComment({ id: commentId2, owner: userId2, thread: testThreadId });
+      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, {});
+      await LikesTableTestHelper.addLike({});
 
-      const commentId3 = 'comment-907811';
-      await CommentsTableTestHelper.addComment({ id: commentId3, owner: userId3, thread: testThreadId });
+      // Action
+      const verifyLikeAvailability = await likeRepositoryPostgres.verifyLikeAvailability(ownerId, commentId);
+
+      // Assert
+      expect(verifyLikeAvailability).toEqual(true);
+    });
+
+    it('should return false if like is unavailable', async () => {
+      // Arrange
+      const ownerId = 'user-123';
+      const commentId = 'comment-123';
+      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, {});
+
+      // Action
+      const verifyLikeAvailability = await likeRepositoryPostgres.verifyLikeAvailability(ownerId, commentId);
+
+      // Assert
+      expect(verifyLikeAvailability).toEqual(false);
+    });
+  });
+
+  describe('getLikesByCommentIds function', () => {
+    it('should return likes array correctly', async () => {
+      // Arrange
+      const id = 'like-123';
+      const commentId = 'comment-123';
+      const ownerId = 'user-123';
+      const commentIds = ['comment-123'];
 
       await LikesTableTestHelper.addLike({
-        id: 'like-134',
-        owner: userId1,
-        comment: commentId1,
+        id,
+        owner: ownerId,
+        commentId,
       });
 
-      await LikesTableTestHelper.addLike({
-        id: 'like-145',
-        owner: userId2,
-        comment: commentId1,
-      });
-      await LikesTableTestHelper.addLike({
-        id: 'like-224',
-        owner: userId1,
-        comment: commentId2,
-      });
+      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, {});
 
-      const fakeIdGenerator = () => '5445';
-      const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
+      // Action
+      const likes = await likeRepositoryPostgres.getLikesByCommentIds(commentIds);
 
-      const likeCount1 = await likeRepositoryPostgres.countCommentLikes(commentId1);
-      const likeCount2 = await likeRepositoryPostgres.countCommentLikes(commentId2);
-      const likeCount3 = await likeRepositoryPostgres.countCommentLikes(commentId3);
-
-      expect(likeCount1).toEqual(2);
-      expect(likeCount2).toEqual(1);
-      expect(likeCount3).toEqual(0);
+      // Assert
+      expect(likes).toStrictEqual([{
+        id: 'like-123',
+        commentId: 'comment-123',
+      }]);
     });
   });
 });

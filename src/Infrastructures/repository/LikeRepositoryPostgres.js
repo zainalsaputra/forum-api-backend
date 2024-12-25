@@ -7,47 +7,56 @@ class LikeRepositoryPostgres extends LikeRepository {
     this._idGenerator = idGenerator;
   }
 
-  async toggleCommentLike(userId, commentId) {
-    const selectLikes = {
-      text: 'SELECT id, is_liked FROM likes WHERE owner = $1 AND comment = $2',
-      values: [userId, commentId],
-    };
-    const { rows } = await this._pool.query(selectLikes);
+  async addLike(ownerId, commentId) {
+    const id = `like-${this._idGenerator()}`;
 
-    let setLikes = {};
-
-    if (rows.length < 1) {
-      const id = `like-${this._idGenerator()}`;
-
-      setLikes = {
-        text: 'INSERT INTO likes VALUES($1, $2, $3, $4)',
-        values: [id, userId, commentId, true],
-      };
-    } else {
-      const { id, is_liked } = rows[0];
-
-      setLikes = {
-        text: 'UPDATE likes SET is_liked = NOT $1 WHERE id = $2',
-        values: [is_liked, id],
-      };
-    }
-
-    await this._pool.query(setLikes);
-  }
-
-  async countCommentLikes(commentId) {
     const query = {
-      text: `SELECT CAST(COUNT(id) AS int) AS likes_count
-           FROM likes
-           WHERE comment = $1
-           AND is_liked = true`,
-      values: [commentId],
+      text: 'INSERT INTO likes VALUES($1, $2, $3) RETURNING id',
+      values: [
+        id,
+        ownerId,
+        commentId,
+      ],
     };
 
-    const { rows } = await this._pool.query(query);
-
-    return rows[0].likes_count;
+    const result = await this._pool.query(query);
+    return result.rows[0];
   }
-}
+
+  async deleteLike(ownerId, commentId) {
+    const query = {
+      text: 'DELETE FROM likes WHERE owner = $1 AND comment_id = $2',
+      values: [
+        ownerId,
+        commentId,
+      ],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async verifyLikeAvailability(ownerId, commentId) {
+    const query = {
+      text: 'SELECT * FROM likes WHERE owner = $1 AND comment_id = $2',
+      values: [
+        ownerId,
+        commentId,
+      ],
+    };
+
+    const result = await this._pool.query(query);
+    return result.rowCount ? true : false;
+  }
+
+  async getLikesByCommentIds(commentIds) {
+    const query = {
+      text: 'SELECT id, comment_id AS "commentId" FROM likes WHERE likes.comment_id = ANY($1::text[])',
+      values: [commentIds] //commentIds bertipe array string
+    };
+
+    const result = await this._pool.query(query);
+    return result.rows;
+  }
+};
 
 module.exports = LikeRepositoryPostgres;

@@ -1,11 +1,14 @@
-const ReplyDetail = require('../../replies/entities/ReplyDetail');
-
 class CommentDetail {
   constructor(payload) {
     this._verifyPayload(payload);
 
     const {
-      id, username, date, content, likeCount = 0, replies,
+      id,
+      username,
+      date,
+      content,
+      likeCount,
+      replies,
     } = payload;
 
     this.id = id;
@@ -17,29 +20,26 @@ class CommentDetail {
   }
 
   _verifyPayload({
-    id, username, date, content, likeCount = 0, replies,
+    id,
+    username,
+    date,
+    content,
+    likeCount,
+    replies
   }) {
-    if (!id || !username || !date || !content) {
+    if (!id || !username || !date || !content || !replies) {
       throw new Error('COMMENT_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
     if (
-      typeof id !== 'string'
-      || typeof username !== 'string'
-      || typeof date !== 'string'
-      || typeof content !== 'string'
-      || typeof likeCount !== 'number'
-      || !Array.isArray(replies)
+      typeof id !== 'string' ||
+      typeof username !== 'string' ||
+      typeof date !== 'string' ||
+      typeof content !== 'string' ||
+      typeof likeCount !== 'number' ||
+      !Array.isArray(replies)
     ) {
       throw new Error('COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
-    }
-
-    if (replies.length > 0) {
-      replies.forEach((reply) => {
-        if (!(reply instanceof ReplyDetail)) {
-          throw new Error('COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
-        }
-      });
     }
   }
 }

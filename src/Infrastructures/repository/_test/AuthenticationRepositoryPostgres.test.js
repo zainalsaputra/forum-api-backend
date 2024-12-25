@@ -22,9 +22,9 @@ describe('AuthenticationRepository postgres', () => {
       await authenticationRepository.addToken(token);
 
       // Assert
-      const tokens = await AuthenticationsTableTestHelper.findToken(token);
-      expect(tokens).toHaveLength(1);
-      expect(tokens[0].token).toBe(token);
+      const findToken = await AuthenticationsTableTestHelper.findToken(token);
+      expect(findToken).toHaveLength(1);
+      expect(findToken[0].token).toBe(token);
     });
   });
 
@@ -62,8 +62,8 @@ describe('AuthenticationRepository postgres', () => {
       await authenticationRepository.deleteToken(token);
 
       // Assert
-      const tokens = await AuthenticationsTableTestHelper.findToken(token);
-      expect(tokens).toHaveLength(0);
+      const findToken = await AuthenticationsTableTestHelper.findToken(token);
+      expect(findToken).toHaveLength(0);
     });
   });
 });

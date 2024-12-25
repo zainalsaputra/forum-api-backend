@@ -11,30 +11,31 @@
     "test:watch": "jest --watchAll --coverage --setupFiles dotenv/config -i",
     "migrate": "node-pg-migrate",
     "migrate:test": "node-pg-migrate -f config/database/test.json",
-    "lint": "npx eslint ."
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hapi/hapi": "^20.1.5",
-    "@hapi/jwt": "^2.0.1",
-    "bcrypt": "^5.0.1",
-    "dotenv": "^10.0.0",
-    "instances-container": "^2.0.3",
-    "nanoid": "^3.1.23",
-    "pg": "^8.6.0"
+    "@hapi/hapi": "^21.3.10",
+    "@hapi/jwt": "^3.2.0",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "instances-container": "^2.0.6",
+    "nanoid": "^3.3.7",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/jest": "^26.0.24",
-    "eslint": "^9.17.0",
-    "eslint-config-airbnb-base": "^15.0.0",
+    "@eslint/js": "^9.14.0",
+    "@types/jest": "^29.5.13",
+    "eslint": "^9.14.0",
+    "eslint-config-dicodingacademy": "^0.9.4",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.31.0",
-    "globals": "^15.14.0",
-    "jest": "^27.0.6",
-    "node-pg-migrate": "^5.10.0",
-    "nodemon": "^2.0.9"
+    "eslint-plugin-jsdoc": "^50.6.1",
+    "globals": "^15.11.0",
+    "jest": "^29.7.0",
+    "node-pg-migrate": "^7.7.0",
+    "nodemon": "^3.1.7"
   }
 }

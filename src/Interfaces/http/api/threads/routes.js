@@ -5,12 +5,12 @@ const routes = (handler) => ([
     handler: handler.postThreadHandler,
     options: {
       auth: 'forumapi_jwt',
-    },
+    }
   },
   {
     method: 'GET',
-    path: '/threads/{threadId}',
-    handler: handler.getThreadCommentHandler,
+    path: '/threads/{id}',
+    handler: handler.getThreadHandler,
   },
 ]);
 

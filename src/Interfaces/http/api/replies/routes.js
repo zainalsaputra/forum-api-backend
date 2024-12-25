@@ -5,7 +5,7 @@ const routes = (handler) => ([
     handler: handler.postReplyHandler,
     options: {
       auth: 'forumapi_jwt',
-    },
+    }
   },
   {
     method: 'DELETE',
@@ -13,7 +13,7 @@ const routes = (handler) => ([
     handler: handler.deleteReplyHandler,
     options: {
       auth: 'forumapi_jwt',
-    },
+    }
   },
 ]);
 

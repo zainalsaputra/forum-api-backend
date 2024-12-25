@@ -1,31 +1,35 @@
 exports.up = (pgm) => {
   pgm.createTable('threads', {
     id: {
-      type: 'varchar(50)',
+      type: 'VARCHAR(50)',
       primaryKey: true,
     },
     title: {
-      type: 'varchar(255)',
+      type: 'TEXT',
       notNull: true,
     },
     body: {
-      type: 'text',
+      type: 'TEXT',
       notNull: true,
     },
     owner: {
-      type: 'varchar(50)',
+      type: 'VARCHAR(50)',
       notNull: true,
-      references: '"users"',
-      onDelete: 'CASCADE',
     },
     created_at: {
-      type: 'timestamp',
+      type: 'TEXT',
       notNull: true,
-      default: pgm.func('current_timestamp'),
-    },
+    }
   });
+
+  pgm.addConstraint(
+    'threads',
+    'fk_threads.owner_users.id',
+    'FOREIGN KEY(owner) REFERENCES users(id) ON DELETE CASCADE',
+  );
 };
 
 exports.down = (pgm) => {
+  pgm.dropConstraint('threads', 'fk_threads.owner_users.id');
   pgm.dropTable('threads');
 };

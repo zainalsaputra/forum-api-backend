@@ -10,13 +10,21 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addReply(reply) {
-    const { owner, comment, content } = reply;
+  async addReply(addReply, ownerId, commentId) {
+    const { content } = addReply;
     const id = `reply-${this._idGenerator()}`;
+    const createdAt = new Date().toISOString();
 
     const query = {
-      text: 'INSERT INTO replies VALUES($1, $2, $3, $4) RETURNING id, owner, content',
-      values: [id, content, owner, comment],
+      text: 'INSERT INTO replies VALUES($1, $2, $3, $4, $5, $6) RETURNING id, content, owner',
+      values: [
+        id,
+        content,
+        ownerId,
+        commentId,
+        createdAt,
+        null
+      ],
     };
 
     const result = await this._pool.query(query);
@@ -24,66 +32,53 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     return new AddedReply(result.rows[0]);
   }
 
-  async verifyAvailableReply(threadId, commentId, replyId) {
+  async getRepliesByCommentIds(commentIds) {
     const query = {
-      text: `
-            SELECT replies.id
-            FROM replies
-            JOIN comments ON replies.comment_id = comments.id
-            WHERE replies.id = $1 AND replies.comment_id = $2 AND comments.thread_id = $3`,
-      values: [replyId, commentId, threadId],
+      text: 'SELECT replies.id, users.username, comment_id AS "commentId", replies.created_at AS date, content, replies.deleted_at AS "deletedAt" FROM replies INNER JOIN users ON users.id = replies.owner WHERE replies.comment_id = ANY($1::text[]) ORDER BY replies.created_at',
+      values: [commentIds] //commentIds bertipe array string
     };
 
     const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Reply not found');
-    }
-  }
-
-  async verifyReplyOwner(replyId, ownerId) {
-    const query = {
-      text: 'SELECT owner FROM replies WHERE id = $1',
-      values: [replyId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (result.rows[0].owner !== ownerId) {
-      throw new AuthorizationError('User is not authorized to access this reply');
-    }
+    return result.rows;
   }
 
   async deleteReplyById(replyId) {
+    const timestamp = new Date().toISOString();
+
     const query = {
-      text: 'UPDATE replies SET is_deleted = true WHERE id = $1',
-      values: [replyId],
+      text: 'UPDATE replies SET deleted_at = $1 WHERE id = $2 RETURNING id',
+      values: [
+        timestamp,
+        replyId,
+      ],
     };
 
     await this._pool.query(query);
   }
 
-  async getRepliesByCommentId(commentId) {
+  async verifyReplyOwner(replyId, userId) {
     const query = {
-      text: `
-        SELECT
-          replies.id,
-          users.username,
-          replies.content,
-          replies.comment_id as comment,
-          TO_CHAR(replies.created_at, 'YYYY-MM-DD"T"HH:MI:SS.MSZ') as date,
-          replies.is_deleted
-        FROM replies
-        LEFT JOIN users ON replies.owner = users.id
-        WHERE replies.comment_id = $1
-        ORDER BY replies.created_at ASC
-        `,
-      values: [commentId],
+      text: 'SELECT * FROM replies WHERE id = $1',
+      values: [replyId],
     };
-
     const result = await this._pool.query(query);
 
-    return result.rows;
+    const reply = result.rows[0];
+    if (reply.owner !== userId) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyReplyAvailability(replyId) {
+    const query = {
+      text: 'SELECT * FROM replies WHERE id = $1',
+      values: [replyId],
+    };
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('reply tidak ditemukan');
+    }
   }
 }
 

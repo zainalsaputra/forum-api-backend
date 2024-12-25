@@ -1,43 +1,38 @@
 const AddThread = require('../AddThread');
 
-describe('an AddThread entities', () => {
+describe('AddThread entities', () => {
   it('should throw error when payload did not contain needed property', () => {
     // Arrange
     const payload = {
-      title: 'abc',
-      body: 'abc',
+      title: 'title',
     };
 
-    // Action and assert
-    expect(() => new AddThread(payload)).toThrowError('ADD_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
+    // Action and Assert
+    expect(() => new AddThread(payload)).toThrow('ADD_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
   });
 
   it('should throw error when payload did not meet data type specification', () => {
     // Arrange
     const payload = {
-      title: 1,
-      body: 'abc',
-      owner: 'abc',
+      title: 123,
+      body: true,
     };
-
-    // Action and assert
-    expect(() => new AddThread(payload)).toThrowError('ADD_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    // Action and Assert
+    expect(() => new AddThread(payload)).toThrow('ADD_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION');
   });
 
   it('should create addThread object correctly', () => {
     // Arrange
     const payload = {
-      title: 'abc',
-      body: 'abc',
-      owner: 'abc',
+      title: 'title',
+      body: 'body',
     };
 
     // Action
-    const { title, body, owner } = new AddThread(payload);
+    const { title, body } = new AddThread(payload);
 
     // Assert
     expect(title).toEqual(payload.title);
     expect(body).toEqual(payload.body);
-    expect(owner).toEqual(payload.owner);
   });
 });

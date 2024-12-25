@@ -10,13 +10,21 @@ class CommentRepositoryPostgres extends CommentRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addComment(comment) {
-    const { owner, thread, content } = comment;
+  async addComment(addComment, ownerId, threadId) {
+    const { content } = addComment;
     const id = `comment-${this._idGenerator()}`;
+    const createdAt = new Date().toISOString();
 
     const query = {
-      text: 'INSERT INTO comments VALUES($1, $2, $3, $4) RETURNING id, owner, content',
-      values: [id, content, owner, thread],
+      text: 'INSERT INTO comments VALUES($1, $2, $3, $4, $5, $6) RETURNING id, content, owner',
+      values: [
+        id,
+        content,
+        ownerId,
+        threadId,
+        createdAt,
+        null
+      ],
     };
 
     const result = await this._pool.query(query);
@@ -24,59 +32,53 @@ class CommentRepositoryPostgres extends CommentRepository {
     return new AddedComment(result.rows[0]);
   }
 
-  async verifyAvailableComment(threadId, commentId) {
-    const query = {
-      text: 'SELECT id FROM comments WHERE id = $1 AND thread_id = $2',
-      values: [commentId, threadId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Comment not found');
-    }
-  }
-
-  async verifyCommentOwner(commentId, ownerId) {
-    const query = {
-      text: 'SELECT owner FROM comments WHERE id = $1',
-      values: [commentId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (result.rows[0].owner !== ownerId) {
-      throw new AuthorizationError('User is not authorized to access this comment');
-    }
-  }
-
-  async deleteCommentById(commentId, threadId) {
-    const query = {
-      text: 'UPDATE comments SET is_deleted = true WHERE id = $1 AND thread_id = $2',
-      values: [commentId, threadId],
-    };
-
-    await this._pool.query(query);
-  }
-
   async getCommentsByThreadId(threadId) {
     const query = {
-      text: `SELECT 
-              comments.id,
-              users.username,
-              comments.content,
-              TO_CHAR(comments.created_at, 'YYYY-MM-DD"T"HH:MI:SS.MSZ') as date,
-              comments.is_deleted
-             FROM comments
-             LEFT JOIN users ON comments.owner = users.id
-             WHERE comments.thread_id = $1
-             ORDER BY comments.created_at ASC`,
+      text: 'SELECT comments.id, users.username, comments.created_at AS date, content, comments.deleted_at AS "deletedAt" FROM comments LEFT JOIN users ON comments.owner=users.id WHERE comments.thread_id = $1',
       values: [threadId],
     };
 
     const result = await this._pool.query(query);
 
     return result.rows;
+  }
+
+  async deleteCommentById(commentId) {
+    const timestamp = new Date().toISOString();
+
+    const query = {
+      text: 'UPDATE comments SET deleted_at = $1 WHERE id = $2 RETURNING id',
+      values: [
+        timestamp,
+        commentId,
+      ],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async verifyCommentOwner(commentId, userId) {
+    const query = {
+      text: 'SELECT * FROM comments WHERE id = $1',
+      values: [commentId],
+    };
+    const result = await this._pool.query(query);
+    const comment = result.rows[0];
+    if (comment.owner !== userId) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyCommentAvailability(commentId) {
+    const query = {
+      text: 'SELECT * FROM comments WHERE id = $1',
+      values: [commentId],
+    };
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('comment tidak ditemukan');
+    }
   }
 }
 

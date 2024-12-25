@@ -1,28 +1,39 @@
-class DetailReply {
+class ReplyDetail {
   constructor(payload) {
     this._verifyPayload(payload);
 
     const {
-      id, content, date, username,
+      id,
+      username,
+      date,
+      content,
     } = payload;
 
     this.id = id;
-    this.content = content;
-    this.date = date;
     this.username = username;
+    this.date = date;
+    this.content = content;
   }
 
   _verifyPayload({
-    id, content, date, username,
+    id,
+    username,
+    date,
+    content,
   }) {
-    if (!id || !content || !date || !username) {
-      throw new Error('DETAIL_REPLY.NOT_CONTAIN_NEEDED_PROPERTY');
+    if (!id || !username || !date || !content) {
+      throw new Error('REPLY_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (typeof id !== 'string' || typeof content !== 'string' || typeof date !== 'string' || typeof username !== 'string') {
-      throw new Error('DETAIL_REPLY.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    if (
+      typeof id !== 'string' ||
+      typeof username !== 'string' ||
+      typeof date !== 'string' ||
+      typeof content !== 'string'
+    ) {
+      throw new Error('REPLY_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }
 }
 
-module.exports = DetailReply;
+module.exports = ReplyDetail;

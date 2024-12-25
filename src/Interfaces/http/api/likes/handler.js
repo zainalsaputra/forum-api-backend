@@ -1,21 +1,26 @@
-const ToggleLikeUseCase = require('../../../../Applications/use_case/ToggleLikeUseCase');
+const LikeUseCase = require('../../../../Applications/use_case/LikeUseCase');
 
 class LikesHandler {
   constructor(container) {
     this._container = container;
 
-    this.putLikeToggleHandler = this.putLikeToggleHandler.bind(this);
+    this.putLikeHandler = this.putLikeHandler.bind(this);
   }
 
-  async putLikeToggleHandler(request, h) {
-    const toggleCommentLike = this._container.getInstance(ToggleLikeUseCase.name);
-    await toggleCommentLike.execute(request.auth.credentials, request.params);
+  async putLikeHandler(request) {
+    const { id: ownerId } = request.auth.credentials;
+    const { threadId, commentId } = request.params;
+    const likeUseCase = this._container.getInstance(LikeUseCase.name);
 
-    const response = h.response({
+    await likeUseCase.execute(
+      ownerId,
+      threadId,
+      commentId
+    );
+
+    return {
       status: 'success',
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 

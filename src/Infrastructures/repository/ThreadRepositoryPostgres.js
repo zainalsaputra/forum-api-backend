@@ -1,6 +1,6 @@
-const AddedThread = require('../../Domains/threads/entities/AddedThread');
 const ThreadRepository = require('../../Domains/threads/ThreadRepository');
 const NotFoundError = require('../../Commons/exceptions/NotFoundError');
+const AddedThread = require('../../Domains/threads/entities/AddedThread');
 
 class ThreadRepositoryPostgres extends ThreadRepository {
   constructor(pool, idGenerator) {
@@ -9,13 +9,14 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addThread(thread) {
-    const { owner, title, body } = thread;
+  async addThread(addThread, owner) {
+    const { title, body } = addThread;
     const id = `thread-${this._idGenerator()}`;
+    const createdAt = new Date().toISOString();
 
     const query = {
-      text: 'INSERT INTO threads VALUES($1, $2, $3, $4) RETURNING id, owner, title',
-      values: [id, title, body, owner],
+      text: 'INSERT INTO threads VALUES($1, $2, $3, $4, $5) RETURNING id, title, owner',
+      values: [id, title, body, owner, createdAt],
     };
 
     const result = await this._pool.query(query);
@@ -23,37 +24,26 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     return new AddedThread(result.rows[0]);
   }
 
-  async verifyAvailableThread(threadId) {
+  async getThreadById(threadId) {
     const query = {
-      text: 'SELECT id FROM threads WHERE id = $1',
+      text: 'SELECT threads.id, title, body, created_at AS date, users.username FROM threads LEFT JOIN users ON threads.owner=users.id WHERE threads.id = $1',
       values: [threadId],
     };
 
+    const result = await this._pool.query(query);
+    return result.rows[0];
+  }
+
+  async verifyThreadAvailability(threadId) {
+    const query = {
+      text: 'SELECT * FROM threads WHERE id = $1',
+      values: [threadId],
+    };
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('Thread not found');
+      throw new NotFoundError('thread tidak ditemukan');
     }
-  }
-
-  async getThreadById(threadId) {
-    const query = {
-      text: `SELECT 
-              threads.id,
-              users.username,
-              threads.title,
-              threads.body,
-              TO_CHAR(
-                threads.created_at, 'YYYY-MM-DD"T"HH:MI:SS.MSZ'
-              ) as date
-             FROM threads
-             JOIN users ON threads.owner = users.id
-             WHERE threads.id = $1`,
-      values: [threadId],
-    };
-    const result = await this._pool.query(query);
-
-    return result.rows[0];
   }
 }
 

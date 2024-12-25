@@ -4,21 +4,24 @@ const pool = require('../src/Infrastructures/database/postgres/pool');
 const RepliesTableTestHelper = {
   async addReply({
     id = 'reply-123',
+    content = 'sebuah balasan',
     owner = 'user-123',
-    comment = 'comment-123',
-    content = 'Dicoding mendukung Indonesia lebih maju berteknologi!',
-    created_at = '2021-08-08T07:19:09.775Z',
-    is_deleted = false,
+    commentId = 'comment-123',
+    createdAt = '2024-11-03T07:19:09.775Z',
+    deletedAt = null,
   }) {
+    // createdAt = new Date().toISOString();
+
     const query = {
       text: 'INSERT INTO replies VALUES($1, $2, $3, $4, $5, $6)',
-      values: [id, content, owner, comment, created_at, is_deleted],
+      values: [id, content, owner, commentId, createdAt, deletedAt],
     };
 
     await pool.query(query);
   },
 
   async findReplyById(id) {
+
     const query = {
       text: 'SELECT * FROM replies WHERE id = $1',
       values: [id],
@@ -30,7 +33,7 @@ const RepliesTableTestHelper = {
 
   async cleanTable() {
     await pool.query('DELETE FROM replies WHERE 1=1');
-  },
+  }
 };
 
 module.exports = RepliesTableTestHelper;

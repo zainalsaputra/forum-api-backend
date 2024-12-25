@@ -1,124 +1,96 @@
 const pool = require('../../database/postgres/pool');
-const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
-const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
-const createServer = require('../createServer');
+const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const container = require('../../container');
+const createServer = require('../createServer');
 
-describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
-  let threadId;
-  let commentId;
-  let accessToken;
-
-  beforeAll(async () => {
-    const server = await createServer(container);
-
-    await server.inject({
-      method: 'POST',
-      url: '/users',
-      payload: {
-        username: 'Takumi',
-        password: 'secret',
-        fullname: 'Fujiwara Takumi',
-      },
-    });
-
-    const loginResponse = await server.inject({
-      method: 'POST',
-      url: '/authentications',
-      payload: {
-        username: 'Takumi',
-        password: 'secret',
-      },
-    });
-
-    const loginData = JSON.parse(loginResponse.payload);
-    accessToken = loginData.data.accessToken;
-
-    const addThreadResponse = await server.inject({
-      method: 'POST',
-      url: '/threads',
-      payload: {
-        title: 'Initial D',
-        body: 'Takumi and Keisuke are good',
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const threadData = JSON.parse(addThreadResponse.payload);
-    threadId = threadData.data.addedThread.id;
-
-    const addCommentResponse = await server.inject({
-      method: 'POST',
-      url: `/threads/${threadId}/comments`,
-      payload: { content: 'This is comment about Takahasi Keisuke' },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const commentData = JSON.parse(addCommentResponse.payload);
-    commentId = commentData.data.addedComment.id;
-  });
-
+describe('/comments endpoint', () => {
   afterAll(async () => {
-    await UsersTableTestHelper.cleanTable();
-    await ThreadsTableTestHelper.cleanTable();
-    await CommentsTableTestHelper.cleanTable();
-    await LikesTableTestHelper.cleanTable();
     await pool.end();
   });
 
+  beforeEach(async () => {
+    const ownerId = 'user-123';
+    const threadId = 'thread-123';
+    const commentId = 'comment-123';
+    await UsersTableTestHelper.addUser({ id: ownerId, username: 'dicoding' });
+    await ThreadsTableTestHelper.addThread({ id: threadId, owner: ownerId });
+    await CommentsTableTestHelper.addComments({ id: commentId, owner: ownerId, threadId });
+  });
+
   afterEach(async () => {
+    await AuthenticationsTableTestHelper.cleanTable();
+    await CommentsTableTestHelper.cleanTable();
     await LikesTableTestHelper.cleanTable();
+    await ThreadsTableTestHelper.cleanTable();
+    await UsersTableTestHelper.cleanTable();
   });
 
-  it('should respond with 200 and success status when like a comment', async () => {
-    const server = await createServer(container);
-    const response = await server.inject({
-      method: 'PUT',
-      url: `/threads/${threadId}/comments/${commentId}/likes`,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+  describe('when PUT /likes', () => {
+    it('should response 200', async () => {
+      // Arrange
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+      const server = await createServer(container);
+
+      // add user
+      await server.inject({
+        method: 'POST',
+        url: '/users',
+        payload: {
+          username: 'username',
+          password: 'secret',
+          fullname: 'Full Name',
+        },
+      });
+
+      // login user
+      const loginResponse = await server.inject({
+        method: 'POST',
+        url: '/authentications',
+        payload: {
+          username: 'username',
+          password: 'secret',
+        },
+      });
+
+      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
+
+      // Action
+      const response = await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/${commentId}/likes`,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
     });
 
-    const responseJson = JSON.parse(response.payload);
-    expect(response.statusCode).toEqual(200);
-    expect(responseJson.status).toEqual('success');
+    it('should response 401 when access token unavailable', async () => {
+      // Arrange
+      const commentId = 'comment-123';
+      const threadId = 'thread-123';
+      const server = await createServer(container);
 
-    const likes = await LikesTableTestHelper.findLikesByCommentId(commentId);
-    expect(likes).toHaveLength(1);
-    expect(likes[0].is_liked).toEqual(true);
-  });
+      // Action
+      const response = await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/${commentId}/likes`,
+      });
 
-  it('should respond with 200 and success status when unlike a comment', async () => {
-    const server = await createServer(container);
-
-    await server.inject({
-      method: 'PUT',
-      url: `/threads/${threadId}/comments/${commentId}/likes`,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(401);
+      expect(responseJson.status).toEqual('fail');
+      expect(responseJson.message).toEqual('Missing authentication');
     });
-
-    const response = await server.inject({
-      method: 'PUT',
-      url: `/threads/${threadId}/comments/${commentId}/likes`,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const responseJson = JSON.parse(response.payload);
-    expect(response.statusCode).toEqual(200);
-    expect(responseJson.status).toEqual('success');
-
-    const likes = await LikesTableTestHelper.findLikesByCommentId(commentId);
-    expect(likes[0].is_liked).toEqual(false);
   });
 });

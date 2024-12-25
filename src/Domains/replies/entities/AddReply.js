@@ -2,19 +2,17 @@ class AddReply {
   constructor(payload) {
     this._verifyPayload(payload);
 
-    const { content, owner, comment } = payload;
+    const { content } = payload;
 
     this.content = content;
-    this.owner = owner;
-    this.comment = comment;
   }
 
-  _verifyPayload({ content, owner, comment }) {
-    if (!content || !owner || !comment) {
+  _verifyPayload({ content }) {
+    if (!content) {
       throw new Error('ADD_REPLY.NOT_CONTAIN_NEEDED_PROPERTY');
     }
 
-    if (typeof content !== 'string' || typeof owner !== 'string' || typeof comment !== 'string') {
+    if (typeof content !== 'string') {
       throw new Error('ADD_REPLY.NOT_MEET_DATA_TYPE_SPECIFICATION');
     }
   }
