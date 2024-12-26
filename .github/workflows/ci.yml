@@ -11,7 +11,7 @@ jobs:
  
     strategy:
       matrix:
-        node-version: ['20.x']
+        node-version: ['14.17.0']
    
     services:
       postgres:
