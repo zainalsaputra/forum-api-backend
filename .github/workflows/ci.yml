@@ -17,9 +17,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: postgres
+          POSTGRES_USER: ${{ secrets.PG_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-          POSTGRES_DB: forumapi_test
+          POSTGRES_DB: ${{ secrets.PG_DATABASE }}
 
         options: >-
           --health-cmd pg_isready
@@ -42,13 +42,13 @@ jobs:
         npm run test
       env:
         CI: true
-        HOST: localhost
-        PORT: 5000
-        PGHOST: localhost
+        HOST: ${{ secrets.HOST }}
+        PORT: ${{ secrets.PORT }}
+        PGHOST: ${{ secrets.PG_HOST }}
         PGPORT: 5432
-        PGUSER: postgres
+        PGUSER: ${{ secrets.PG_USERNAME }}
         PGPASSWORD: ${{ secrets.PG_PASSWORD }}
-        PGDATABASE: forumapi_test
-        ACCESS_TOKEN_KEY: access_token_key
-        REFRESH_TOKEN_KEY: refresh_token_key
+        PGDATABASE: ${{ secrets.PG_DATABASE_TEST }}
+        ACCESS_TOKEN_KEY: ${{ secrets.PG_ACCESS_TOKEN_KEY }}
+        REFRESH_TOKEN_KEY: ${{ secrets.PG_REFRESH_TOKEN_KEY }}
         ACCESS_TOKEN_AGE: 3600
