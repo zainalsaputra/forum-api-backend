@@ -38,12 +38,12 @@ describe('HTTP server', () => {
       // Action
       const response = await server.inject({
         method: 'GET',
-        url: '/',
+        url: '/home',
       });
       // Assert
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(200);
-      expect(responseJson.value).toEqual(`It's Home, Hello world!`);
+      expect(responseJson.value).toEqual('Its Home, Hello world!');
     });
   });
 

@@ -73,6 +73,14 @@ const createServer = async (container) => {
     }),
   });
 
+  server.route({
+    method: 'GET',
+    path: '/home',
+    handler: () => ({
+      value: 'Its Home, Hello world!',
+    }),
+  });
+
   server.ext('onPreResponse', (request, h) => {
     // mendapatkan konteks response dari request
     const { response } = request;
