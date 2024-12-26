@@ -44,10 +44,10 @@ jobs:
         CI: true
         HOST: localhost
         PORT: 5000
-        PGHOST: ${{ secrets.PG_HOST }}
+        PGHOST: localhost
         PGPORT: 5432
         PGUSER: postgres
-        PGPASSWORD: ${{ secrets.PG_PASSWORD }}
+        PGPASSWORD: localhost
         PGDATABASE: forumapi_test
         ACCESS_TOKEN_KEY: access_token_key
         REFRESH_TOKEN_KEY: refresh_token_key
