@@ -47,7 +47,7 @@ jobs:
         PGHOST: ${{ secrets.PG_HOST }}
         PGPORT: 5432
         PGUSER: ${{ secrets.PG_USERNAME }}
-        PGPASSWORD: ${{ secrets.PG_PASSWORD }}
+        PGPASSWORD: ${{ secrets.PG_PASSWORD }}-m
         PGDATABASE: ${{ secrets.PG_DATABASE_TEST }}
         ACCESS_TOKEN_KEY: ${{ secrets.PG_ACCESS_TOKEN_KEY }}
         REFRESH_TOKEN_KEY: ${{ secrets.PG_REFRESH_TOKEN_KEY }}
