@@ -5,4 +5,3 @@ coverage
 .env
 .env.prod
 .env.local
-.github/workflows/ci-rds.yml
