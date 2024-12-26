@@ -12,15 +12,14 @@ jobs:
     strategy:
       matrix:
         node-version: ['20.x']
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
    
     services:
       postgres:
         image: postgres
         env:
-         POSTGRES_USER: ${{ secrets.PG_USERNAME }}
-         POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-         POSTGRES_DB: ${{ secrets.PG_DATABASE }}
+          POSTGRES_USER: ${{ secrets.PG_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PG_DATABASE }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -30,33 +29,46 @@ jobs:
           - 5432:5432
  
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
+
     - name: Install dependencies
       run: npm install
+
     - name: Run migrations for main database
       run: npm run migrate up
       env:
-        HOST: ${{ secrets.HOST }}
-        PORT: 5000
         PGHOST: ${{ secrets.PG_HOST }}
         PGPORT: 5432
         PGUSER: ${{ secrets.PG_USERNAME }}
         PGPASSWORD: ${{ secrets.PG_PASSWORD }}
         PGDATABASE: ${{ secrets.PG_DATABASE }}
+
+    - name: Create test database config
+      run: |
+        jq \
+        '.username = env.PGUSER | .password = env.PGPASSWORD | .host = env.PGHOST | .database = env.PGDATABASE_TEST' \
+        config/database/test-example.json > config/database/test.json
+      env:
+        PGUSER: ${{ secrets.PG_USERNAME }}
+        PGPASSWORD: ${{ secrets.PG_PASSWORD }}
+        PGHOST: ${{ secrets.PG_HOST }}
+        PGDATABASE_TEST: ${{ secrets.PG_DATABASE_TEST }}
+
     - name: Run migrations for test database
       run: npm run migrate:test up
       env:
-        HOST: ${{ secrets.HOST }}
-        PORT: 5000
         PGHOST: ${{ secrets.PG_HOST }}
         PGPORT: 5432
         PGUSER: ${{ secrets.PG_USERNAME }}
         PGPASSWORD: ${{ secrets.PG_PASSWORD }}
         PGDATABASE: ${{ secrets.PG_DATABASE_TEST }}
+
     - name: Run tests
       run: npm run test
       env:
